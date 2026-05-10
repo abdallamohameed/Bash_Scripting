@@ -1,0 +1,149 @@
+#!/bin/bash
+while true
+do
+choice=$(whiptail --title "Main Menu" --menu "Choose one" 22 70 12 \
+"Add User" "Add a user to the system" \
+"Modify User" "Modify an existing user" \
+"Delete User" "Delete an existing user" \
+"List Users" "List all users" \
+"Add Group" "Add a group" \
+"Modify Group" "Rename a group" \
+"Delete Group" "Delete a group" \
+"List Groups" "List all groups" \
+"Disable User" "Lock user account" \
+"Enable User" "Unlock user account" \
+"Change Password" "Change user password" \
+"About" "Information about program" \
+"Exit" "Exit the program" \
+3>&1 1>&2 2>&3)
+
+[ $? -ne 0 ] && break
+
+if [ "$choice" = "Add User" ]; then
+    user=$(whiptail --inputbox "Enter new username" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if id "$user" >/dev/null 2>&1; then
+        whiptail --msgbox "User $user already exists" 10 40
+    else
+        useradd "$user"
+        passwd "$user"
+	whiptail --msgbox "User $user added successfully" 10 40
+    fi
+
+elif [ "$choice" = "Modify User" ]; then
+    olduser=$(whiptail --inputbox "Enter old username" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if ! id "$olduser" >/dev/null 2>&1; then
+        whiptail --msgbox "User $olduser does not exist" 10 40
+    else
+        newuser=$(whiptail --inputbox "Enter new username" 10 40 3>&1 1>&2 2>&3)
+        [ $? -ne 0 ] && continue
+
+        if id "$newuser" >/dev/null 2>&1; then
+            whiptail --msgbox "username $newuser  already exists" 10 40
+        else
+            usermod -l "$newuser" "$olduser"
+            whiptail --msgbox "User $olduser changed successfully" 10 40
+        fi
+    fi
+
+elif [ "$choice" = "Delete User" ]; then
+    user=$(whiptail --inputbox "Enter username to delete" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if id "$user" >/dev/null 2>&1; then
+        userdel -r "$user"
+        whiptail --msgbox "User $user deleted successfully" 10 40
+    else
+        whiptail --msgbox "User $user does not exist" 10 40
+    fi
+
+elif [ "$choice" = "List Users" ]; then
+    whiptail --msgbox "$(cut -d: -f1 /etc/passwd|tail)" 20 50
+
+elif [ "$choice" = "Add Group" ]; then
+    group=$(whiptail --inputbox "Enter new group name" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if getent group "$group" >/dev/null 2>&1; then
+        whiptail --msgbox "Group $group already exists" 10 40
+    else
+        groupadd "$group"
+        whiptail --msgbox "Group $group added successfully" 10 40
+    fi
+
+elif [ "$choice" = "Modify Group" ]; then
+    oldgroup=$(whiptail --inputbox "Enter old group name" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if ! getent group "$oldgroup" >/dev/null 2>&1; then
+        whiptail --msgbox "Group $oldgroup does not exist" 10 40
+    else
+        newgroup=$(whiptail --inputbox "Enter new group name" 10 40 3>&1 1>&2 2>&3)
+        [ $? -ne 0 ] && continue
+
+        if getent group "$newgroup" >/dev/null 2>&1; then
+            whiptail --msgbox "groupname $newgroup  already exists" 10 40
+        else
+            groupmod -n "$newgroup" "$oldgroup"
+            whiptail --msgbox "Group $oldgroup changed successfully" 10 40
+        fi
+    fi
+
+elif [ "$choice" = "Delete Group" ]; then
+    group=$(whiptail --inputbox "Enter group name to delete" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if getent group "$group" >/dev/null 2>&1; then
+        groupdel "$group"
+        whiptail --msgbox "Group $group deleted successfully" 10 40
+    else
+        whiptail --msgbox "Group $group does not exist" 10 40
+    fi
+
+elif [ "$choice" = "List Groups" ]; then
+    whiptail --msgbox "$(cut -d: -f1 /etc/group|tail)" 20 50
+
+elif [ "$choice" = "Disable User" ]; then
+    user=$(whiptail --inputbox "Enter username to disable" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if id "$user" >/dev/null 2>&1; then
+        usermod -L "$user"
+        whiptail --msgbox "User $user disabled successfully" 10 40
+    else
+        whiptail --msgbox "User $user does not exist" 10 40
+    fi
+
+elif [ "$choice" = "Enable User" ]; then
+    user=$(whiptail --inputbox "Enter username to enable" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if id "$user" >/dev/null 2>&1; then
+        usermod -U "$user"
+        whiptail --msgbox "User $user enabled successfully" 10 40
+    else
+        whiptail --msgbox "User $user does not exist" 10 40
+    fi
+
+elif [ "$choice" = "Change Password" ]; then
+    user=$(whiptail --inputbox "Enter username" 10 40 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && continue
+
+    if id "$user" >/dev/null 2>&1; then
+        passwd "$user"
+	whiptail --msgbox "password  $user changed successfully" 10 40
+    else
+        whiptail --msgbox "User $user does not exist" 10 40
+    fi
+
+elif [ "$choice" = "About" ]; then
+    whiptail --msgbox "Create it by  using Bash + Whiptail -> abdalla Mohamed Aboulfotouh" 10 60
+
+elif [ "$choice" = "Exit" ]; then
+    break
+fi
+
+done
